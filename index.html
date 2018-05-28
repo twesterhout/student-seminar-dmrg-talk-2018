@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>DMRG</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/night.css">
+    <link rel="stylesheet" href="user.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!--
+          17 mins total:
+
+            * (3 mins.) Introduction: try to sell the DMRG method
+
+              Hello everyone! Today I'd like to briefly introduce a method I mentioned
+              during my pitch, namely the Density Matrix Renormalization Group, or DMRG
+              for short. First of all, I'm going to try to sell you on this method by
+              stating some nice features of it. Then, I'm going to explain, in very
+              qualitative and non-nechnical terms, the idea of DMRG. We'll start with
+              a review of the "standard" Renormalization group as it is known in condensed
+              matter physics. 
+              
+              We'll then finish off with a discussion of the current
+              developments and limitations of it.
+
+              Alright, let's jump into it. 
+
+            * (2 mins.) Standard RG
+            * (4 mins.) Numerical RG introduced by Wilson
+            * (4 mins.) DMRG as normal RG except for choosing different states
+            * (1 min. ) Limitations
+            * (3 mins.) Take-home message
+
+        -->
+        <section style="height: 100%;">
+          <div style="height: 100%; display: table;">
+            <h2>Density Matrix Renormalization Group</h2>
+            <p class="footer">
+              Tom Westerhout<br>
+              2018 May 28
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h3>Outline</h3> 
+
+          <ul>
+            <li>Features</li>
+            <li>"Standard" RG</li>
+            <li>Numerical RG by Wilson</li>
+            <li>DMRG by White</li>
+            <li>Limitations</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Features</h3>
+
+          <ul>
+            <li class="fragment">Variational</li>
+            <li class="fragment">No "sign-problem"</li>
+            <li class="fragment">Fast</li>
+            <li class="fragment"><b>Very accurate</b></li>
+          </ul>
+        </section>
+
+        <section>
+          <section>
+            <h3>Renormalization Group</h3>
+
+            <p class="fragment">
+              <b>Core concept:</b> Minimum-length $\Lambda^{-1}$.
+            </p>
+            <!--
+              Let's start with the "standard" RG. I think the most important
+              concept behind it is the so called minimum-length - one over
+              lambda. Basically, it defines a length scale at which we
+              investigate the system.
+
+              There are a few assumptions about this minimum length. First of
+              all, the scales of physical phenomena of interest are much larger
+              than one over lamdba. Secondly, the form of the equations and
+              parameters in the equations describing the physical phenomena are
+              defined with respect to this minimum length. And finally that
+              these parameters summarize the relevant information concerning
+              motions over a scale smaller than one over lambda.
+            -->
+
+            <!--
+              Consider, for example, a dilute gas of uranium atoms. If we're interested
+              in describing atomic phenomena, we'll probably choose one over lambda to
+              be of order of the nuclear size. It is then much larger than the nuclear
+              scale and Schrodinger equation for electrons contains parameters such as
+              total nuclear charge and moments, not the motion of 238 nucleons. If on
+              the other hand we are interested in describing sound propagation phenomena,
+              then one over lambda will be of order of a few mean free paths. Equations
+              of motions are now sound-wave equations and parameters include
+              compressability and viscosity. The point is clear, I hope.
+            -->
+          </section>
+
+          <section>
+            <!--
+              We can now ask ourselves whether it is possible to perform this
+              transition in a kind of continuous manner. This is what RG is all
+              about.
+
+              Consider, for example, a description of a system for some lambda.
+              From the statistical point of view, we just have some probability
+              distribution P which defines the physics of our system.
+
+              Now pick a scaling factor s larger than one and multiply our
+              lambda with it. We now have some parameters in P which are too
+              small scale for our lambda. So just trace them out. The tricky
+              part then lies in rewriting the new probability distribution in
+              the same form as the old one. Exactly how you do it is not
+              important for this talk, let's just assume than you can.
+
+              Now, how can we transform this into a numerical computation?
+            -->
+            <p class="fragment">$P \propto \exp(-\mathcal{H}(\Lambda)/T)$</p>
+            <p class="fragment">$P' = \operatorname{Tr}_{\Lambda \leq k < s\Lambda} P
+                                   \propto \exp(-\mathcal{H}(s\Lambda)/T)$</p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <!--
+              Kenneth Wilson was the first one to perform RG numerically. He
+              applied it to the Kondo problem in 1975. His approach is usually
+              called Blocks Renormalization Group.
+
+              The idea to iteratively solve bigger and bigger problems. We
+              find the ground state of a block A. We then combine two blocks to form
+              a new Hamiltonian and repeat the procedure.
+
+              There's one caveat though. That way, the size of the matrix we
+              need to diagonalize grows exponentially, i.e. we've gained
+              nothing. The trick is to do a basis transformation by truncating
+              the dimension of our Hilbert space to some constant m.
+
+              ...
+
+              This way, no matter how many iterations of we perform, the largest
+              matrix we'll have to diagonalize is m squared by m squared.
+            -->
+
+            <h3>Blocks Renormalization Group</h3>
+            <img src="assets/blocks.png" style="background: inherit; border: none;">
+            <p style="height: 100px; text-align: center;">
+              <span class="fragment" data-fragment-index="1">
+                $\mathcal{H}_\mathrm{A} \rightarrow$
+              </span>
+              <span class="fragment fade-in" data-fragment-index="1"
+                    style="position: absolute;">
+                <span class="fragment fade-out" data-fragment-index="2"
+                      style="position: absolute;">
+                  $\; \mathcal{H}_\mathrm{AA}$
+                </span>
+              </span>
+              <span class="fragment fade-in" data-fragment-index="2"
+                    style="position: absolute;">
+                $\; \mathcal{O}\mathcal{H}_\mathrm{AA}\mathcal{O}^\dagger$
+              </span>
+            </p>
+            <p class="fragment" data-fragment-index="2">
+              $\mathcal{O}$ is an $m \times \operatorname{dim}\mathcal{H}_\mathrm{AA}$
+              matrix with $m$ lowest eigenstates of $\mathcal{H}_\mathrm{AA}$.
+            </p>
+          </section>
+
+          <section>
+            <img src="assets/blocks.png" style="background: inherit; border: none;">
+            <img src="assets/well.png" style="background: inherit; border: none;">
+          </section>
+        </section>
+
+        <section>
+          <ul>
+            <li>AA is a part a bigger system.</li>
+            <li>The whole system is in a pure state $|\psi\rangle$.</li>
+            <li>$\{|i\rangle\}_{i=1\dots\operatorname{dim}\mathcal{H}_\mathrm{AA}}$
+              &mdash; basis for AA.
+            </li>
+            <li>$\{|j\rangle\}$ &mdash; basis for the rest of the system.</li>
+            <li>$|\psi\rangle = \sum_{i,j}\psi_{i,j}|i\rangle|j\rangle$.</li>
+          </ul>
+          <p class="fragment">
+            Can we come up with a set $\{|a\rangle\}_{a=1\dots m}$ with
+            $m &lt; \operatorname{dim}\mathcal{H}_\mathrm{AA}$ such that
+            $|\psi\rangle \approx \sum_{i,j}\alpha_{a,j}|a\rangle|j\rangle$
+            <b>?</b>
+          </p>
+        </section>
+
+        <section>
+          <h3>Answer: Density Matrix!</h3>
+          <p>
+            $\{|a\rangle\}_{a=1\dots m}$ should be the eigenvectors of
+            $\rho_\mathrm{AA}$ with the largest weights $\{w_a\}$.
+          </p>
+          <p class="fragment">
+            $\epsilon = 1 - \sum w_a$ &mdash; truncation error.
+          </p>
+        </section>
+
+        <section>
+          <section>
+            <h3>Finally: DMRG</h3>
+            <img src="assets/superblock.png"
+                 style="height: 160px; background: inherit; border: none;">
+            <ol style="display: block;">
+              <li>
+                $\mathcal{H}_\mathrm{A}
+                  \rightarrow \mathcal{H}_\mathrm{A\bullet}
+                  \rightarrow \mathcal{H}_\mathrm{A\bullet\bullet A}$.<br>
+                Diagonalize $\mathcal{H}_\mathrm{A\bullet\bullet A}$ to obtain
+                $|\psi\rangle$.
+              </li>
+              <li>
+                Construct reduced density matrix $\rho_\mathrm{A\bullet}$
+              </li>
+              <li>
+                Diagonalize $\rho_\mathrm{A\bullet}$ to find largest $m$ eigenvalues $w_a$
+                and corresponding eigenvectors $|a\rangle$.
+              </li>
+              <li>Change the basis and truncate.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3>Finite System?</h3>
+            <img src="assets/finite.png"
+                 style="height: 170px; background: inherit; border: none;">
+          </section>
+        </section>
+
+        <section>
+          <h3>DMRG Nowadays</h3>
+          <ul>
+            <li>The best method for low-energy physics in 1D.</li>
+            <li>Higher dimensions are very computationally expensive.</li>
+            <li>Convergence near critical points is worse.</li>
+            <li>Extensions for finite temperatures.</li>
+            <li>Extensions for time-dependent Hamiltonians.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>To Remember</h3>
+
+          <img src="assets/superblock.png"
+               style="height: 170px; background: inherit; border: none;">
+          <p>Minimum-length $\Lambda^{-1}$.</p>
+          <p>Truncation of Hilbert space.</p>
+          <p>Density-matrix to minimize the truncation error.</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        controls: true,
+        controlsTutorial: false,
+        progress: false,
+        history: true,
+        center: true,
+        keyboard: true,
+        touch: false,
+        overview: true,
+        mouseWheel: false,
+        // width: 960,
+        // height: 720,
+        // theme: false, // hardcoded with CSS import in <head>
+        transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+        transitionSpeed: 'fast', // default/fast/slow
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          config:  'TeX-AMS_HTML-full'  // See http://docs.mathjax.org/en/latest/config-files.html
+        },
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/math/math.js', async: true }
+        ]
+      });
+    </script>
+  </body>
+</html>
